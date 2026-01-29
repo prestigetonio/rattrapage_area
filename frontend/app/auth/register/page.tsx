@@ -49,7 +49,7 @@ export default function LoginPage() {
             S'inscrire
         </button>
         <p className="text-black text-sm text-center mt-4">
-            Déjà un compte ? <Link href="/login" className="text-blue-600">Se connecter</Link>
+            Déjà un compte ? <Link href="/auth/login" className="text-blue-600">Se connecter</Link>
         </p>
       </form>
     </div>
