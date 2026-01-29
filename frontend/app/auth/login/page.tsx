@@ -2,13 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { authApi } from "@/api/auth";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const Submit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    console.log("Données envoyées:", formData);
+    try {
+        const res = await authApi.login(formData);
+        alert("succès " + res.message);
+    } catch (err) {
+        alert("erreur de co");
+    }
   };
 
   const GithubLogin = () => {
@@ -49,7 +55,7 @@ export default function LoginPage() {
             Se connecter
         </button>
         <p className="text-black text-sm text-center mt-4">
-            Pas de compte ? <Link href="/auth/register" className="text-blue-600">Se connecter</Link>
+            Pas de compte ? <Link href="/auth/register" className="text-blue-600">S'inscrire</Link>
         </p>
       </form>
     </div>

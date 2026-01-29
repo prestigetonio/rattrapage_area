@@ -2,13 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { authApi } from "@/api/auth";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
 
+  const router = useRouter();
+
   const Submit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    console.log("Données envoyées:", formData);
+    try {
+        await authApi.register(formData);
+        alert("compte créé");
+        router.push("/auth/login");
+    } catch (err) {
+        alert("l'inscription a échoué");
+    }
   };
 
   const GithubRegister = () => {
