@@ -3,15 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authApi } from "@/api/auth";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+
+  const router = useRouter();
 
   const Submit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
         const res = await authApi.login(formData);
         alert("succès " + res.message);
+        router.push("/dashboard");
     } catch (err) {
         alert("erreur de co");
     }
