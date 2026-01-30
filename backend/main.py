@@ -34,10 +34,7 @@ def register(user: schemas.UserAuth, db: Session = Depends(get_db)):
 
 @app.post("/login")
 def login(user: schemas.UserAuth, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(
-        models.User.email == user.email, 
-        models.User.hashed_password == user.password
-    ).first()
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="email ou mdp incorrect")
     return {"status": "success", "message": "connecté !"}
