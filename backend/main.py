@@ -4,7 +4,15 @@ from sqlalchemy.orm import Session
 from db.database import engine, get_db
 from db import models
 from auth_utils import hash_password, verify_password
+from dotenv import load_dotenv
 import schemas
+import os
+import httpx
+
+load_dotenv()
+
+GITHUB_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -19,6 +27,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/auth/github")
+async def github_auth(code: str, db: Session = Depends(get_db)):
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post("https://github.com/login/oauth/access_token",
+            params={
+                "client_id": GITHUB_ID,
+                "client_secret": GITHUB_SECRET,
+                "code": code,
+            },
+            headers={"Accept": "application/json"},
+        )
+        token_data = token_res.json()
+        access_token = token_data.get("access_token")
+        user_res = await client.get("https://api.github.com/user/emails",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        emails = user_res.json()
+        primary_email = next(e['email'] for e in emails if e['primary'])
+    user = db.query(models.User).filter(models.User.email == primary_email).first()
+    if not user:
+        user = models.User(email=primary_email, hashed_password="OAUTH_GITHUB_USER")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return {"status": "success", "email": user.email}
 
 @app.post("/register")
 def register(user: schemas.UserAuth, db: Session = Depends(get_db)):

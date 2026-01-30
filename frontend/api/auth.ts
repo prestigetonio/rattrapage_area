@@ -18,5 +18,12 @@ export const authApi = {
     });
     if (!res.ok) throw new Error("id incorrects");
     return res.json();
-  }
+  },
+  githubAuth: async (code: string) => {
+    const res = await fetch(`${API_URL}/auth/github?code=${code}`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error("Erreur authentification GitHub");
+    return res.json();
+  },
 };

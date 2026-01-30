@@ -6,23 +6,27 @@ import { authApi } from "@/api/auth";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+    const [formData, setFormData] = useState({ email: "", password: "" });
+    const router = useRouter();
 
-  const router = useRouter();
+    const Submit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        try {
+            await authApi.register(formData);
+            alert("compte créé");
+            router.push("/auth/login");
+        } catch (err) {
+            alert("l'inscription a échoué");
+        }
+    };
 
-  const Submit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    try {
-        await authApi.register(formData);
-        alert("compte créé");
-        router.push("/auth/login");
-    } catch (err) {
-        alert("l'inscription a échoué");
-    }
-  };
-
-  const GithubRegister = () => {
-  };
+    const GithubRegister = () => {
+        const clientID = "Ov23liEKLOerncA5uYnG";
+        const redirectUri = "http://localhost:3001/auth/callback";
+        const scope = "user:email";
+        const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&scope=${scope}`;
+        window.location.href = githubUrl;
+    };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
