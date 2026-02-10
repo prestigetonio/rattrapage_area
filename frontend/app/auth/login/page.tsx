@@ -13,7 +13,7 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             const res = await authApi.login(formData);
-            alert("succès " + res.message);
+            localStorage.setItem("user", JSON.stringify(res)); 
             router.push("/dashboard");
         } catch (err) {
             alert("erreur de co");
