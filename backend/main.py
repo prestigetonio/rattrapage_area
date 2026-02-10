@@ -48,10 +48,12 @@ async def github_auth(code: str, db: Session = Depends(get_db)):
         primary_email = next(e['email'] for e in emails if e['primary'])
     user = db.query(models.User).filter(models.User.email == primary_email).first()
     if not user:
-        user = models.User(email=primary_email, hashed_password="OAUTH_GITHUB_USER")
+        user = models.User(email=primary_email, hashed_password="OAUTH_GITHUB_USER", github_token=access_token)
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    else:
+        user.github_token = access_token
+    db.commit()
+    db.refresh(user)
     return {"status": "success", "email": user.email}
 
 @app.post("/register")
