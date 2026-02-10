@@ -74,3 +74,63 @@ def login(user: schemas.UserAuth, db: Session = Depends(get_db)):
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="email ou mdp incorrect")
     return {"status": "success", "message": "connecté !"}
+
+@app.get("/user/service-status")
+async def get_service_status(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email.lower()).first()    
+    if not user:
+        return {"github_connected": False}
+    is_connected = user.github_token is not None and user.github_token != ""
+    return {"github_connected": is_connected}
+
+@app.get("/github/repos")
+async def get_github_repos(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email.lower()).first()
+    if not user or not user.github_token:
+        raise HTTPException(status_code=401, detail="Non connecté à GitHub")
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            repos_res = await client.get(
+                "https://api.github.com/user/repos",
+                headers={"Authorization": f"Bearer {user.github_token}"},
+                params={"sort": "updated", "per_page": 10}
+            )
+            if repos_res.status_code != 200:
+                raise HTTPException(status_code=repos_res.status_code, detail="erreur API github")
+            
+            repos = repos_res.json()
+            return [{"id": r["id"], "name": r["name"], "url": r["html_url"]} for r in repos]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
+
+@app.post("/github/reaction")
+async def create_github_repo(data: dict, db: Session = Depends(get_db)):
+    email = data.get("email")
+    user = db.query(models.User).filter(models.User.email == email.lower()).first()
+    if not user or not user.github_token:
+        raise HTTPException(status_code=401, detail="non connecté à github")
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            create_res = await client.post(
+                "https://api.github.com/user/repos",
+                headers={
+                    "Authorization": f"Bearer {user.github_token}",
+                    "Accept": "application/vnd.github.v3+json"
+                },
+                json={
+                    "name": "Areatest",
+                    "description": "rep créé via AREA",
+                    "private": False
+                }
+            )
+            if create_res.status_code == 201:
+                return {"status": "success", "message": "dépot créé !"}
+            elif create_res.status_code == 422:
+                return {"status": "info", "message": "dépôt existe"}
+            else:
+                raise HTTPException(status_code=create_res.status_code, detail="erreur crée")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
+        

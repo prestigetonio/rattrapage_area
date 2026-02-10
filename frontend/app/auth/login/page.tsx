@@ -13,7 +13,7 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             const res = await authApi.login(formData);
-            localStorage.setItem("user", JSON.stringify(res)); 
+            localStorage.setItem("user", JSON.stringify({ email: formData.email })); 
             router.push("/dashboard");
         } catch (err) {
             alert("erreur de co");
@@ -23,7 +23,7 @@ export default function LoginPage() {
     const GithubLogin = () => {
         const clientID = "Ov23liEKLOerncA5uYnG";
         const redirectUri = "http://localhost:3001/auth/callback";
-        const scope = "user:email";
+        const scope = "user:email,repo";
         const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectUri}&scope=${scope}`;
         window.location.href = githubUrl;
     };
@@ -45,7 +45,6 @@ export default function LoginPage() {
             onChange={(e) => setFormData({...formData, password: e.target.value})}
             required
         />
-
         {/* CO GITHUB */}
         <div className="flex items-center mb-5">
             <div className="flex-grow border-t border-gray-300"></div>
